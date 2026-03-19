@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>チーム・メタボリズム</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#e0e0e0;font-family:'Yu Gothic UI','Hiragino Sans',sans-serif;font-size:14px;min-height:100vh}
+
+/* === セットアップ画面 === */
+#setup{max-width:600px;margin:60px auto;padding:32px;background:#16213e;border-radius:12px;border:1px solid #0f3460}
+#setup h1{text-align:center;font-size:24px;margin-bottom:24px;color:#e94560}
+#setup .field{margin-bottom:20px}
+#setup .field label{display:block;font-weight:bold;margin-bottom:8px;color:#a8b2d1}
+#setup .radio-group{display:flex;gap:12px;flex-wrap:wrap}
+#setup .radio-group label{display:flex;align-items:center;gap:4px;cursor:pointer;padding:6px 14px;border:1px solid #0f3460;border-radius:6px;transition:all .2s}
+#setup .radio-group label:hover{border-color:#e94560}
+#setup .radio-group input:checked+span{color:#e94560;font-weight:bold}
+#setup .radio-group input{display:none}
+#setup .profession-selects{display:flex;flex-direction:column;gap:8px}
+#setup .profession-selects select{background:#1a1a2e;color:#e0e0e0;border:1px solid #0f3460;border-radius:6px;padding:8px;font-size:14px}
+#setup #start-btn{display:block;width:100%;margin-top:24px;padding:14px;background:linear-gradient(135deg,#e94560,#c23152);color:#fff;border:none;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;transition:opacity .2s}
+#setup #start-btn:hover{opacity:.85}
+#setup #start-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* === ゲーム画面 === */
+#game{display:none;padding:8px;max-width:1400px;margin:0 auto}
+
+/* ヘッダー */
+#header{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:10px 16px;background:#16213e;border-radius:8px;margin-bottom:8px;border:1px solid #0f3460}
+.hdr-item{display:flex;align-items:center;gap:6px;font-size:13px}
+.hdr-label{color:#a8b2d1}
+.hdr-bar{display:flex;gap:2px}
+.hdr-bar .b{width:14px;height:14px;border-radius:2px}
+.hdr-bar .b.on{background:linear-gradient(135deg,#42a5f5,#1565c0)}
+.hdr-bar .b.fav-on{background:#4caf50}
+.hdr-bar .b.fav-on:nth-child(-n+3){background:#f44336}
+.hdr-bar .b.fav-on:nth-child(n+4):nth-child(-n+5){background:#ff9800}
+.hdr-bar .b.fav-on:nth-child(n+6):nth-child(-n+7){background:#ffc107}
+.hdr-bar .b.fav-on:nth-child(n+8){background:#4caf50}
+.hdr-bar .b.off{background:#2a2a4a}
+.favor-name{font-size:11px;color:#a8b2d1;margin-left:4px}
+.favor-stars{letter-spacing:2px}
+
+/* 患者ゾーン */
+#patient-zone{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;padding-bottom:4px}
+.patient-slot{min-width:140px;flex:1;border:2px dashed #2a2a4a;border-radius:8px;padding:8px;min-height:120px;display:flex;flex-direction:column;position:relative;transition:all .2s}
+.patient-slot.occupied{border-style:solid}
+.patient-slot.alert-normal{border-color:#4CAF50}
+.patient-slot.alert-caution{border-color:#FF9800}
+.patient-slot.alert-danger{border-color:#F44336}
+.patient-slot.high-slot{background:rgba(244,67,54,.08)}
+.patient-slot.selected-priority{box-shadow:0 0 8px #ffeb3b}
+.slot-num{position:absolute;top:4px;left:8px;font-size:11px;color:#666}
+.patient-title{font-size:12px;font-weight:bold;margin-top:16px;margin-bottom:4px}
+.patient-req{font-size:11px;color:#a8b2d1}
+.patient-req .done{color:#4CAF50}
+#penalty-zone{min-width:100px;border:2px solid #F44336;border-radius:8px;padding:8px;background:rgba(244,67,54,.12);display:flex;flex-direction:column;align-items:center;justify-content:center}
+#penalty-zone .pz-label{font-size:11px;color:#F44336;font-weight:bold;margin-bottom:4px}
+#penalty-zone .pz-count{font-size:24px;color:#F44336;font-weight:bold}
+
+/* イベントエリア */
+#event-area{min-height:40px;margin-bottom:8px;padding:8px 12px;border-radius:8px;background:#16213e;border:1px solid #0f3460;display:none}
+#event-area.visible{display:block}
+#event-area.crisis{border-color:#F44336;background:rgba(244,67,54,.1)}
+.event-title{font-weight:bold;margin-bottom:4px}
+.event-effect{font-size:13px;color:#a8b2d1}
+
+/* プレイヤーパネル */
+#player-panels{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto}
+.player-panel{flex:1;min-width:160px;max-width:220px;padding:10px;background:#16213e;border:2px solid #0f3460;border-radius:8px;transition:all .2s}
+.player-panel.current-turn{border-color:#e94560;box-shadow:0 0 12px rgba(233,69,96,.4)}
+.player-panel.leader{border-top:3px solid #FFD700}
+.player-panel.exhausted{opacity:.7;border-color:#FF9800}
+.player-panel.eliminated{opacity:.4;border-color:#666}
+.leader-badge{margin-right:4px;font-size:14px}
+.player-panel[title]{cursor:help}
+.pp-mission{margin-top:4px;border-top:1px solid #0f3460;padding-top:4px}
+.pp-name{font-size:13px;font-weight:bold;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-stats{font-size:12px;line-height:1.7}
+.pp-stats .stat-label{color:#a8b2d1}
+.bn-bar{display:inline-flex;gap:1px;vertical-align:middle}
+.bn-bar .bn{width:8px;height:8px;border-radius:1px}
+.bn-bar .bn.filled{background:#FF9800}
+.bn-bar .bn.over{background:#F44336}
+.bn-bar .bn.empty{background:#2a2a4a}
+
+/* 手札エリア */
+#hand-area{margin-bottom:12px;background:#16213e;border-radius:8px;padding:12px;border:1px solid #0f3460}
+#hand-area h3{font-size:14px;color:#a8b2d1;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #0f3460}
+#hand-cards{display:flex;gap:8px;flex-wrap:wrap;min-height:100px}
+.hand-card{
+  width:130px;min-height:100px;padding:10px;
+  border:2px solid #555;border-radius:10px;
+  font-size:12px;cursor:pointer;
+  transition:all .2s;background:#1e2a45;
+  display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.hand-card:hover{transform:translateY(-6px);box-shadow:0 6px 16px rgba(0,0,0,.5)}
+.hand-card.selected{transform:translateY(-8px);box-shadow:0 8px 20px rgba(233,69,96,.4);border-color:#e94560}
+.hand-card .hc-icon{font-size:24px;text-align:center;margin-bottom:4px}
+.hand-card .hc-title{font-size:11px;font-weight:bold;line-height:1.3;flex:1}
+.hand-card .hc-type{font-size:10px;padding:2px 6px;border-radius:4px;text-align:center;margin-top:6px;font-weight:bold}
+.hand-card .hc-provides{font-size:9px;color:#aaa;text-align:center;margin-top:2px}
+/* 種別ごとの色分け（classにdata属性を使用） */
+.hand-card[data-type="診察"]{border-color:#42A5F5;background:linear-gradient(180deg,#1a2a40 0%,#1a2a50 100%)}
+.hand-card[data-type="診察"] .hc-type{background:#42A5F5;color:#fff}
+.hand-card[data-type="エデュケーション"]{border-color:#66BB6A;background:linear-gradient(180deg,#1a2a20 0%,#1a3020 100%)}
+.hand-card[data-type="エデュケーション"] .hc-type{background:#66BB6A;color:#fff}
+.hand-card[data-type="ソーシャル"]{border-color:#AB47BC;background:linear-gradient(180deg,#2a1a30 0%,#2a1a40 100%)}
+.hand-card[data-type="ソーシャル"] .hc-type{background:#AB47BC;color:#fff}
+.hand-card[data-type="マネジメント"]{border-color:#FFB74D;background:linear-gradient(180deg,#2a2010 0%,#302510 100%)}
+.hand-card[data-type="マネジメント"] .hc-type{background:#FFB74D;color:#333}
+
+/* アクションエリア */
+#action-area{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.action-btn{padding:8px 16px;background:#0f3460;color:#e0e0e0;border:1px solid #1a5276;border-radius:6px;cursor:pointer;font-size:13px;transition:all .15s}
+.action-btn:hover:not(:disabled){background:#1a5276}
+.action-btn:disabled{opacity:.35;cursor:not-allowed}
+.action-btn.pass{border-color:#F44336;color:#F44336}
+.phase-btn{padding:10px 24px;background:linear-gradient(135deg,#e94560,#c23152);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold}
+.phase-btn:hover{opacity:.85}
+
+/* メッセージ */
+#message-bar{padding:8px 12px;background:#0f3460;border-radius:6px;margin-bottom:8px;font-size:13px;min-height:32px;display:none}
+#message-bar.visible{display:block}
+
+/* ログ */
+#log{height:200px;overflow-y:auto;background:#111;border-radius:8px;padding:8px 12px;font-size:11px;line-height:1.6;border:1px solid #222}
+#log .log-entry{color:#888}
+#log .log-entry .log-tag{color:#42A5F5}
+
+/* === モーダル === */
+#modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+#modal-overlay.visible{display:flex}
+#modal{background:#16213e;border:1px solid #0f3460;border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+#modal h3{margin-bottom:12px;color:#e94560}
+#modal .modal-label{margin-bottom:16px;font-size:14px;line-height:1.6}
+#modal .modal-buttons{display:flex;flex-direction:column;gap:8px}
+#modal .modal-btn{padding:10px 16px;background:#0f3460;color:#e0e0e0;border:1px solid #1a5276;border-radius:6px;cursor:pointer;font-size:14px;text-align:left;transition:all .15s}
+#modal .modal-btn:hover{background:#1a5276}
+#modal .modal-btn.confirm-yes{border-color:#4CAF50;color:#4CAF50}
+#modal .modal-btn.confirm-no{border-color:#F44336;color:#F44336}
+
+/* ゲームオーバー */
+#gameover-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center}
+#gameover-overlay.visible{display:flex}
+#gameover{background:#16213e;border-radius:12px;padding:32px;max-width:700px;width:95%;text-align:center;max-height:90vh;overflow-y:auto}
+#gameover h2{font-size:28px;margin-bottom:16px}
+#gameover .go-reason{font-size:16px;margin-bottom:24px;color:#a8b2d1}
+#gameover .go-stats{text-align:left;font-size:13px;line-height:2}
+#gameover .go-restart{margin-top:24px;padding:12px 32px;background:linear-gradient(135deg,#e94560,#c23152);color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+
+/* 難易度オプション */
+#setup .options-section{margin-top:16px;padding:12px;border:1px solid #0f3460;border-radius:8px;background:#1a1a2e}
+#setup .options-section h3{font-size:14px;color:#a8b2d1;margin-bottom:8px}
+#setup .opt-group{margin-bottom:8px}
+#setup .opt-group label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:3px 0}
+#setup .opt-group input[type="checkbox"]{accent-color:#e94560}
+
+/* 演説タイマー */
+.speech-panel{text-align:center;padding:20px}
+.speech-timer{font-size:48px;font-weight:bold;color:#e94560;margin:16px 0}
+.speech-player{font-size:20px;margin-bottom:8px;color:#42A5F5}
+.speech-skip{padding:10px 24px;background:#0f3460;color:#e0e0e0;border:1px solid #1a5276;border-radius:6px;cursor:pointer;font-size:14px;margin-top:12px}
+
+/* 投票UI */
+.vote-panel{text-align:center;padding:16px}
+.vote-info{font-size:16px;margin-bottom:12px}
+.vote-remaining{font-size:14px;color:#FF9800;margin-bottom:12px}
+.vote-buttons{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px}
+.vote-btn{padding:8px 16px;background:#0f3460;color:#e0e0e0;border:1px solid #1a5276;border-radius:6px;cursor:pointer;font-size:13px;min-width:100px;transition:all .15s}
+.vote-btn:hover{background:#1a5276}
+.vote-btn .vote-count{font-size:18px;font-weight:bold;display:block;color:#42A5F5}
+.vote-confirm{padding:10px 24px;background:linear-gradient(135deg,#4CAF50,#388E3C);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold}
+.vote-confirm:disabled{opacity:.4;cursor:not-allowed}
+.vote-timer{font-size:24px;color:#FF9800;margin-bottom:8px}
+
+/* ミッション公開 */
+.mission-reveal{text-align:left;padding:16px}
+.mission-card{padding:10px;margin-bottom:8px;border:1px solid #0f3460;border-radius:6px;background:#1a1a2e}
+.mission-card.achieved{border-color:#4CAF50}
+.mission-card.failed{border-color:#666;opacity:.7}
+.mission-player{font-weight:bold;margin-bottom:4px}
+.mission-title{color:#e94560}
+.mission-status{font-size:12px;margin-top:4px}
+
+/* VP結果 */
+.vp-results{text-align:left;padding:16px}
+.vp-row{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #222}
+.vp-row.mvp{background:rgba(255,215,0,.1);border-color:#FFD700}
+.vp-rank{font-size:18px;font-weight:bold;width:30px;color:#a8b2d1}
+.vp-name{flex:1;font-weight:bold}
+.vp-score{font-size:18px;font-weight:bold;color:#42A5F5}
+.vp-breakdown{font-size:11px;color:#a8b2d1}
+
+/* デブリーフィング */
+.debrief-section{margin-bottom:16px;text-align:left}
+.debrief-section h4{color:#e94560;margin-bottom:8px;font-size:14px}
+.debrief-bar-chart{display:flex;align-items:flex-end;gap:4px;height:80px;padding:4px 0}
+.debrief-bar{display:flex;flex-direction:column;align-items:center;flex:1}
+.debrief-bar-fill{width:100%;background:linear-gradient(135deg,#42a5f5,#1565c0);border-radius:2px 2px 0 0;min-width:20px;transition:height .3s}
+.debrief-bar-label{font-size:10px;color:#a8b2d1;margin-top:2px}
+.debrief-bar-val{font-size:10px;color:#e0e0e0}
+.debrief-table{width:100%;font-size:12px;border-collapse:collapse}
+.debrief-table td,.debrief-table th{padding:4px 8px;border-bottom:1px solid #222;text-align:left}
+.debrief-table th{color:#a8b2d1}
+
+/* 申し送り改善: 手札概要 */
+.briefing-summary{padding:8px 12px;background:#0f3460;border-radius:6px;margin-bottom:8px;font-size:12px;line-height:1.8}
+.briefing-summary .bs-player{margin-bottom:4px}
+.briefing-summary .bs-has{color:#4CAF50}
+.briefing-summary .bs-none{color:#F44336}
+
+/* 優先患者選択フィードバック改善 */
+.patient-slot.selected-priority{box-shadow:0 0 12px #ffeb3b;border-color:#ffeb3b !important;position:relative}
+.patient-slot.selected-priority::after{content:"\2605 \u512A\u5148";position:absolute;top:2px;right:4px;font-size:10px;color:#ffeb3b;font-weight:bold}
+
+/* NPC表示 */
+.npc-panel{flex:1;min-width:120px;max-width:160px;padding:8px;background:#16213e;border:2px dashed #0f3460;border-radius:8px;opacity:.6}
+.npc-panel .pp-name{font-size:12px;color:#a8b2d1}
+
+/* === アニメーション定義 === */
+@keyframes slideIn{
+  from{transform:translateX(-40px);opacity:0}
+  to{transform:translateX(0);opacity:1}
+}
+@keyframes burnoutFlash{
+  0%{background-color:transparent}
+  25%{background-color:rgba(244,67,54,.3)}
+  50%{background-color:transparent}
+  75%{background-color:rgba(244,67,54,.2)}
+  100%{background-color:transparent}
+}
+@keyframes cohesionPulse{
+  0%{filter:brightness(1)}
+  50%{filter:brightness(1.5)}
+  100%{filter:brightness(1)}
+}
+@keyframes resolveGlow{
+  0%{box-shadow:0 0 0 rgba(255,215,0,0)}
+  50%{box-shadow:0 0 20px rgba(255,215,0,.8)}
+  100%{box-shadow:0 0 0 rgba(255,215,0,0)}
+}
+@keyframes shatter{
+  0%{transform:scale(1);opacity:1;filter:none}
+  30%{transform:scale(1.05);filter:blur(0)}
+  60%{transform:scale(.95) skewX(2deg);filter:blur(1px)}
+  100%{transform:scale(.9) skewX(-1deg);opacity:.4;filter:grayscale(1)}
+}
+@keyframes defeatFlash{
+  0%{background-color:transparent}
+  20%{background-color:rgba(244,67,54,.4)}
+  40%{background-color:transparent}
+  60%{background-color:rgba(244,67,54,.3)}
+  80%{background-color:transparent}
+  100%{background-color:rgba(244,67,54,.1)}
+}
+@keyframes victoryGlow{
+  0%{box-shadow:0 0 0 rgba(255,215,0,0);background-color:transparent}
+  50%{box-shadow:0 0 40px rgba(255,215,0,.4);background-color:rgba(255,215,0,.05)}
+  100%{box-shadow:0 0 0 rgba(255,215,0,0);background-color:transparent}
+}
+@keyframes diceRoll{
+  0%{transform:rotate(0deg) scale(1)}
+  25%{transform:rotate(90deg) scale(1.2)}
+  50%{transform:rotate(180deg) scale(1)}
+  75%{transform:rotate(270deg) scale(1.1)}
+  100%{transform:rotate(360deg) scale(1)}
+}
+@keyframes pushSlide{
+  from{transform:translateX(-100%);opacity:0}
+  to{transform:translateX(0);opacity:1}
+}
+
+/* アニメーション適用クラス */
+.animate-slideIn{animation:slideIn .4s ease-out}
+.animate-burnoutFlash{animation:burnoutFlash .6s ease-in-out}
+.animate-cohesionPulse{animation:cohesionPulse .5s ease-in-out}
+.animate-resolveGlow{animation:resolveGlow 1s ease-in-out}
+.animate-shatter{animation:shatter .8s ease-out forwards}
+.animate-defeatFlash{animation:defeatFlash 1.2s ease-in-out}
+.animate-victoryGlow{animation:victoryGlow 1.5s ease-in-out 2}
+.animate-diceRoll{animation:diceRoll .5s ease-in-out}
+.animate-pushSlide{animation:pushSlide .3s ease-out}
+</style>
+</head>
+<body>
+
+<!-- ==================== セットアップ画面 ==================== -->
+<div id="setup">
+  <h1>チーム・メタボリズム</h1>
+
+  <div class="field">
+    <label>プレイ人数</label>
+    <div class="radio-group" id="player-count-group">
+      <label><input type="radio" name="pcount" value="3"><span>3人</span></label>
+      <label><input type="radio" name="pcount" value="4" checked><span>4人</span></label>
+      <label><input type="radio" name="pcount" value="5"><span>5人</span></label>
+      <label><input type="radio" name="pcount" value="6"><span>6人</span></label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>難易度</label>
+    <div class="radio-group" id="difficulty-group">
+      <label><input type="radio" name="diff" value="入門"><span>入門</span></label>
+      <label><input type="radio" name="diff" value="標準" checked><span>標準</span></label>
+      <label><input type="radio" name="diff" value="上級"><span>上級</span></label>
+      <label><input type="radio" name="diff" value="地獄"><span>地獄</span></label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>職種選択</label>
+    <div class="profession-selects" id="profession-selects"></div>
+  </div>
+
+  <div class="field">
+    <label>追加オプション</label>
+    <div class="options-section">
+      <h3>ハードモード</h3>
+      <div class="opt-group">
+        <label><input type="checkbox" id="opt-hard-strategy"> 作戦タイム短縮（60→30秒）</label>
+        <label><input type="checkbox" id="opt-hard-hand"> 手札制限（初期5→4枚）</label>
+        <label><input type="checkbox" id="opt-hard-patients"> 患者増加（毎ラウンド+1枚）</label>
+      </div>
+      <h3>イージーモード</h3>
+      <div class="opt-group">
+        <label><input type="checkbox" id="opt-easy-strategy"> 作戦タイム延長（60→90秒）</label>
+        <label><input type="checkbox" id="opt-easy-burnout"> バーンアウト緩和（全職種閾値+1）</label>
+        <label><input type="checkbox" id="opt-easy-skill"> 固有スキル追加（2回使用可能）</label>
+        <label><input type="checkbox" id="opt-easy-comm"> コミュニケーション自由（危機後の制限なし）</label>
+      </div>
+    </div>
+  </div>
+
+  <button id="start-btn">ゲーム開始</button>
+</div>
+
+<!-- ==================== ゲーム画面 ==================== -->
+<div id="game">
+  <div id="header"></div>
+  <div id="patient-zone"></div>
+  <div id="event-area"></div>
+  <div id="player-panels"></div>
+  <div id="message-bar"></div>
+  <div id="hand-area"><h3>手札</h3><div id="hand-cards"></div></div>
+  <div id="action-area"></div>
+  <div id="log"></div>
+</div>
+
+<!-- ==================== モーダル ==================== -->
+<div id="modal-overlay"><div id="modal"></div></div>
+
+<!-- ==================== ゲームオーバー ==================== -->
+<div id="gameover-overlay"><div id="gameover"></div></div>
+
+<!-- ==================== JS読み込み ==================== -->
+<script src="js/data.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/gameState.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/phases.js"></script>
+<script src="js/actions.js"></script>
+<script src="js/main.js"></script>
+<script>
+// ======================================================================
+// UI オブジェクト
+// ======================================================================
+const UI = {
+  _selectedHandIndex: -1,
+  _selectedPrioritySlot: -1,
+  _timers: [],
+
+  // --- 要素参照ヘルパー ---
+  $(id) { return document.getElementById(id); },
+
+  // ==================================================================
+  // animate - アニメーション適用ヘルパー
+  // ==================================================================
+  animate(element, animationName, duration) {
+    if (!element) return;
+    const cls = 'animate-' + animationName;
+    element.classList.add(cls);
+    setTimeout(() => element.classList.remove(cls), duration || 1000);
+  },
+
+  // ==================================================================
+  // renderAll
+  // ==================================================================
+  renderAll(gs) {
+    this.renderHeader(gs);
+    this.renderPatientZone(gs);
+    this.renderPlayerPanels(gs);
+    this.renderLog(gs);
+  },
+
+  // ==================================================================
+  // renderHeader
+  // ==================================================================
+  renderHeader(gs) {
+    const el = this.$('header');
+    // 結束度バー
+    let cohBar = '';
+    for (let i = 1; i <= CONSTANTS.MAX_COHESION; i++) {
+      cohBar += `<div class="b ${i <= gs.cohesion ? 'on' : 'off'}"></div>`;
+    }
+    // 病院長の評価バー（10段階）
+    let favorBar = '';
+    for (let i = 1; i <= CONSTANTS.MAX_FAVOR; i++) {
+      favorBar += `<div class="b ${i <= gs.hospitalFavor ? 'fav-on' : 'off'}"></div>`;
+    }
+    // 危機マーカー
+    const crisisCount = gs.crisisMarkerCount || 0;
+    // 評価レベル名と効果
+    const favorEffect = CONSTANTS.FAVOR_EFFECTS[gs.hospitalFavor];
+    const favorName = favorEffect ? favorEffect.name : '';
+    const favorDesc = favorEffect ? (favorEffect.desc || '') : '';
+    // 評価の色: 低=赤、中=白、高=緑
+    const favorColor = gs.hospitalFavor <= 2 ? '#F44336' : gs.hospitalFavor >= 8 ? '#4CAF50' : '#e0e0e0';
+
+    el.innerHTML =
+      `<div class="hdr-item"><span class="hdr-label">R:</span> ${gs.round}/${CONSTANTS.ROUNDS || CONSTANTS.TOTAL_ROUNDS}</div>` +
+      `<div class="hdr-item"><span class="hdr-label">結束度:</span><div class="hdr-bar">${cohBar}</div> ${gs.cohesion}/${CONSTANTS.MAX_COHESION}</div>` +
+      `<div class="hdr-item"><span class="hdr-label">評価:</span><div class="hdr-bar">${favorBar}</div> <span style="color:${favorColor};font-weight:bold">${gs.hospitalFavor}</span>/${CONSTANTS.MAX_FAVOR} <span class="favor-name">${favorName}</span></div>` +
+      `<div class="hdr-item favor-desc" style="font-size:11px;color:${favorColor}">→ ${favorDesc}</div>` +
+      `<div class="hdr-item"><span class="hdr-label">ペナルティ:</span> ${_penaltyDots(gs)}${gs.penaltyZone.length}/${CONSTANTS.PENALTY_ZONE_LIMIT}</div>` +
+      `<div class="hdr-item"><span class="hdr-label">解決:</span> ${gs.totalResolved}</div>` +
+      `<div class="hdr-item"><span class="hdr-label">危機:</span> ${crisisCount}</div>`;
+
+    function _penaltyDots(gs) {
+      let d = '';
+      for (let i = 0; i < CONSTANTS.PENALTY_ZONE_LIMIT; i++) {
+        d += i < gs.penaltyZone.length ? '\u25cf' : '\u25cb';
+      }
+      return d + ' ';
+    }
+  },
+
+  // ==================================================================
+  // renderPatientZone
+  // ==================================================================
+  renderPatientZone(gs) {
+    const el = this.$('patient-zone');
+    let html = '';
+    const effectiveSlots = gs.slotsReduced ? gs.maxSlots - 1 : gs.maxSlots;
+
+    for (let i = 0; i < effectiveSlots; i++) {
+      const card = gs.patientSlots[i];
+      const isHigh = i >= 5;
+      const isPriority = (i === this._selectedPrioritySlot);
+      let cls = 'patient-slot';
+      if (isHigh) cls += ' high-slot';
+      if (isPriority) cls += ' selected-priority';
+
+      if (card) {
+        const alertCls = card.alert === '要警戒' ? 'alert-danger'
+                       : card.alert === '要注意' ? 'alert-caution'
+                       : 'alert-normal';
+        cls += ` occupied ${alertCls}`;
+        const actions = gs.slotActions[i];
+        const req = card.requiredActions;
+        let reqHtml = '';
+        for (const [type, need] of Object.entries(req)) {
+          if (need <= 0) continue;
+          const have = actions[type] || 0;
+          const done = have >= need ? ' done' : '';
+          reqHtml += `<span class="${done}">${type}:${have}/${need}</span> `;
+        }
+        html += `<div class="${cls}" data-slot="${i}">` +
+          `<span class="slot-num">${i+1}</span>` +
+          `<div class="patient-title">${card.title}</div>` +
+          `<div class="patient-req">${reqHtml}</div>` +
+          `</div>`;
+      } else {
+        html += `<div class="${cls}" data-slot="${i}"><span class="slot-num">${i+1}</span></div>`;
+      }
+    }
+
+    // ペナルティゾーン
+    html += `<div id="penalty-zone"><div class="pz-label">放置</div><div class="pz-count">${gs.penaltyZone.length}</div></div>`;
+    el.innerHTML = html;
+
+    // スロットクリックで優先患者選択
+    el.querySelectorAll('.patient-slot.occupied').forEach(slot => {
+      slot.style.cursor = 'pointer';
+      slot.addEventListener('click', () => {
+        const idx = parseInt(slot.dataset.slot);
+        this._selectedPrioritySlot = (this._selectedPrioritySlot === idx) ? -1 : idx;
+        this.renderPatientZone(gs);
+      });
+    });
+  },
+
+  // ==================================================================
+  // renderPlayerPanels
+  // ==================================================================
+  renderPlayerPanels(gs) {
+    const el = this.$('player-panels');
+    let html = '';
+    for (let i = 0; i < gs.players.length; i++) {
+      const p = gs.players[i];
+      const isCurrent = (i === gs.currentTurnIndex && gs.currentPhase === 'action');
+      let cls = 'player-panel';
+      if (isCurrent) cls += ' current-turn';
+      if (p.status === 'exhausted') cls += ' exhausted';
+      if (p.status === 'eliminated') cls += ' eliminated';
+
+      // バーンアウトバー
+      const threshold = p.profession.burnoutThreshold;
+      let bnBar = '';
+      for (let b = 1; b <= CONSTANTS.MAX_BURNOUT; b++) {
+        const filled = b <= p.burnout;
+        const over = b > threshold && filled;
+        bnBar += `<div class="bn ${over ? 'over' : filled ? 'filled' : 'empty'}"></div>`;
+      }
+
+      const isLeader = (i === gs.leaderIndex);
+      if (isLeader) cls += ' leader';
+
+      const statusLabel = p.status === 'eliminated' ? ' [脱落]' : '';
+      const leaderBadge = isLeader ? '<span class="leader-badge">👑</span>' : '';
+
+      const deckCount = p.actionDeck ? p.actionDeck.length : 0;
+      const missionText = p.secretMission
+        ? `【秘密ミッション】${p.secretMission.title}\n${p.secretMission.condition}\n達成VP: ${p.secretMission.vp}`
+        : '秘密ミッション: 未選択';
+      html += `<div class="${cls}" id="player-panel-${i}" title="${missionText.replace(/"/g, '&quot;')}">` +
+        `<div class="pp-name">${leaderBadge}${p.profession.name}${statusLabel}</div>` +
+        `<div class="pp-stats">` +
+        `<div><span class="stat-label">BN:</span> <span class="bn-bar">${bnBar}</span> ${p.burnout}/${threshold}</div>` +
+        `<div><span class="stat-label">手札:</span> ${p.hand.length} <span class="stat-label">根回:</span> ${p.lobbyCards} <span class="stat-label">デッキ:</span> ${deckCount}</div>` +
+        `<div><span class="stat-label">VP:</span> ${p.votingCards}</div>` +
+        `<div class="pp-mission">🔒 <span style="font-size:10px;color:#888">ホバーでミッション表示</span></div>` +
+        `</div></div>`;
+    }
+    // NPC表示
+    if (gs.npcs && gs.npcs.length > 0) {
+      for (const npc of gs.npcs) {
+        html += `<div class="npc-panel"><div class="pp-name">NPC: ${npc.name}</div></div>`;
+      }
+    }
+    el.innerHTML = html;
+  },
+
+  // ==================================================================
+  // renderHand
+  // ==================================================================
+  renderHand(gs, playerIndex) {
+    const area = this.$('hand-area');
+    if (!area) { console.error('hand-area not found!'); return; }
+    let el = this.$('hand-cards');
+
+    // hand-cards が消えている場合は再作成
+    if (!el) {
+      console.warn('[renderHand] hand-cards再作成');
+      area.innerHTML = '<h3>手札</h3><div id="hand-cards"></div>';
+      el = this.$('hand-cards');
+    }
+
+    const player = gs.players[playerIndex];
+    if (!player) { console.error('Player not found:', playerIndex); return; }
+    this._selectedHandIndex = -1;
+
+    // 手札エリアを確実に表示
+    area.style.display = 'block';
+
+    // ヘッダー
+    area.querySelector('h3').innerHTML =
+      `<span style="color:#e94560;font-size:16px">${player.profession.name}</span> の手札` +
+      `<span style="color:#42A5F5;margin-left:16px;font-size:15px">⚡ 残りアクション: ${player.actionsRemaining}</span>` +
+      `<span style="color:#a8b2d1;margin-left:12px">(${player.hand.length}枚)</span>`;
+
+    const typeIcons = { 診察: '🩺', エデュケーション: '📖', ソーシャル: '🤝', マネジメント: '📋' };
+
+    let html = '';
+    if (player.hand.length === 0) {
+      html = '<div style="color:#888;padding:20px;text-align:center;font-size:14px">手札がありません</div>';
+    } else {
+      html += '<div style="font-size:12px;color:#999;margin-bottom:8px">▼ カードをクリックして選択 → 下の「カードプレイ」ボタンで患者に使用</div>';
+      for (let i = 0; i < player.hand.length; i++) {
+        const c = player.hand[i];
+        const type = c.type || 'その他';
+        const icon = typeIcons[type] || '❓';
+        const provides = c.provides ? Object.entries(c.provides).filter(([k,v]) => v > 0).map(([k,v]) => k + '×' + v).join(' ') : type + '×1';
+        const extra = c.extra || '';
+
+        html += `<div class="hand-card" data-type="${type}" data-idx="${i}">` +
+          `<div class="hc-icon">${icon}</div>` +
+          `<div class="hc-title">${c.title}</div>` +
+          `<div class="hc-type">${type}</div>` +
+          `<div class="hc-provides">→ ${provides}</div>` +
+          (extra ? `<div class="hc-provides" style="color:#FFB74D">★ ${extra}</div>` : '') +
+          `</div>`;
+      }
+    }
+    el.innerHTML = html;
+
+    // クリックで選択/解除
+    el.querySelectorAll('.hand-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.dataset.idx);
+        el.querySelectorAll('.hand-card').forEach(c => c.classList.remove('selected'));
+        if (this._selectedHandIndex === idx) {
+          this._selectedHandIndex = -1;
+        } else {
+          this._selectedHandIndex = idx;
+          card.classList.add('selected');
+        }
+      });
+    });
+  },
+
+  // ==================================================================
+  // renderActionButtons
+  // ==================================================================
+  renderActionButtons(gs, playerIndex, callbacks) {
+    const el = this.$('action-area');
+    const player = gs.players[playerIndex];
+    const noActions = player.actionsRemaining <= 0;
+
+    el.innerHTML =
+      `<button class="action-btn" id="btn-play" ${noActions ? 'disabled' : ''}>カードプレイ</button>` +
+      `<button class="action-btn" id="btn-lobby" ${player.lobbyCards <= 0 ? 'disabled' : ''}>根回しカード</button>` +
+      `<button class="action-btn" id="btn-skill" ${noActions || player.skillUsed ? 'disabled' : ''}>固有スキル</button>` +
+      `<button class="action-btn" id="btn-sub" ${noActions || player.substituteUsedThisTurn ? 'disabled' : ''}>私の仕事じゃないのに...</button>` +
+      `<button class="action-btn pass" id="btn-pass">パス</button>`;
+
+    // カードプレイ
+    this.$('btn-play').addEventListener('click', () => {
+      if (this._selectedHandIndex < 0) { this.showMessage('手札を選択してください'); return; }
+      const card = player.hand[this._selectedHandIndex];
+      if (card.type === 'マネジメント') {
+        callbacks.onPlayCard(this._selectedHandIndex, -1);
+      } else {
+        // 患者スロット選択モーダル
+        this._showSlotSelection(gs, (slotIdx) => {
+          callbacks.onPlayCard(this._selectedHandIndex, slotIdx);
+        });
+      }
+    });
+
+    // 根回しカード（5つの効果から選択）
+    this.$('btn-lobby').addEventListener('click', () => {
+      const modal = this.$('modal');
+      const overlay = this.$('modal-overlay');
+      let html = '<h3>根回しカード: 効果を選択</h3><div class="modal-buttons" style="flex-direction:column">';
+      html += '<button class="modal-btn" data-eff="a">📈 (a) 病院長の評価アップ: 確定+1</button>';
+      // 情報偵察(c)は廃止
+      html += '<button class="modal-btn" data-eff="d">➕ (d) アクション委譲: 他プレイヤー+1アクション</button>';
+      html += '<button class="modal-btn" data-eff="e">💚 (e) バーンアウト緩和: 他プレイヤーBN-1</button>';
+      html += '<button class="modal-btn" style="background:#333">キャンセル</button>';
+      html += '</div>';
+      overlay.classList.add('visible');
+      modal.innerHTML = html;
+      modal.querySelectorAll('.modal-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          overlay.classList.remove('visible');
+          const eff = btn.dataset.eff;
+          if (!eff) return; // キャンセル
+          if (eff === 'd' || eff === 'e') {
+            // 対象プレイヤー選択が必要
+            this.showTargetSelection(gs, playerIndex, eff === 'd' ? 'action_delegate' : 'burnout_relief', (toIdx) => {
+              callbacks.onUseLobby(eff, toIdx);
+            });
+          } else {
+            callbacks.onUseLobby(eff);
+          }
+        });
+      });
+    });
+
+    // 固有スキル
+    this.$('btn-skill').addEventListener('click', () => { callbacks.onUseSkill(); });
+
+    // 代行（2枚選択→種別選択→患者スロット選択）
+    this.$('btn-sub').addEventListener('click', () => {
+      if (player.hand.length < 2) { this.showMessage('手札が2枚未満のため使用できません'); return; }
+      // モーダルで2枚選択
+      const modal = this.$('modal');
+      const overlay = this.$('modal-overlay');
+      let html = '<h3>私の仕事じゃないのに...: 捨てる2枚を選択</h3><div class="modal-buttons" style="flex-wrap:wrap">';
+      for (let i = 0; i < player.hand.length; i++) {
+        html += `<button class="modal-btn sub-card" data-idx="${i}" style="min-width:120px">${player.hand[i].title}</button>`;
+      }
+      html += '</div><div id="sub-selected" style="margin-top:8px;color:#a8b2d1">選択: 0/2枚</div>';
+      html += '<button class="modal-btn" id="sub-cancel" style="background:#333;margin-top:8px">キャンセル</button>';
+      overlay.classList.add('visible');
+      modal.innerHTML = html;
+      const selected = [];
+      modal.querySelectorAll('.sub-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.idx);
+          if (selected.includes(idx)) {
+            selected.splice(selected.indexOf(idx), 1);
+            btn.style.opacity = '1';
+          } else if (selected.length < 2) {
+            selected.push(idx);
+            btn.style.opacity = '0.4';
+          }
+          modal.querySelector('#sub-selected').textContent = '選択: ' + selected.length + '/2枚';
+          if (selected.length === 2) {
+            overlay.classList.remove('visible');
+            // 種別選択
+            const modal2 = this.$('modal');
+            let html2 = '<h3>私の仕事じゃないのに...: 提供するアクション種別</h3><div class="modal-buttons">';
+            html2 += '<button class="modal-btn" data-type="診察">🩺 診察</button>';
+            html2 += '<button class="modal-btn" data-type="エデュケーション">📖 エデュケーション</button>';
+            html2 += '<button class="modal-btn" data-type="ソーシャル">🤝 ソーシャル</button>';
+            html2 += '</div>';
+            overlay.classList.add('visible');
+            modal2.innerHTML = html2;
+            modal2.querySelectorAll('.modal-btn').forEach(tbtn => {
+              tbtn.addEventListener('click', () => {
+                overlay.classList.remove('visible');
+                const actionType = tbtn.dataset.type;
+                this._showSlotSelection(gs, (slotIdx) => {
+                  callbacks.onSubstitute(selected[0], selected[1], slotIdx, actionType);
+                });
+              });
+            });
+          }
+        });
+      });
+      modal.querySelector('#sub-cancel').addEventListener('click', () => { overlay.classList.remove('visible'); });
+    });
+
+    // パス
+    this.$('btn-pass').addEventListener('click', () => { callbacks.onPass(); });
+  },
+
+  // ==================================================================
+  // showMessage
+  // ==================================================================
+  showMessage(text) {
+    const el = this.$('message-bar');
+    el.textContent = text;
+    el.classList.add('visible');
+    clearTimeout(this._msgTimer);
+    this._msgTimer = setTimeout(() => el.classList.remove('visible'), 5000);
+  },
+
+  // ==================================================================
+  // showPhaseControls
+  // ==================================================================
+  showPhaseControls(type, callback) {
+    // フェーズ遷移中は手札エリアを非表示
+    this.$('hand-area').style.display = 'none';
+
+    const el = this.$('action-area');
+    const labels = {
+      briefing: '申し送り完了 → イベントフェーズへ',
+      event_done: 'イベント確認 → 患者追加フェーズへ',
+      patient_done: '患者追加確認 → アクションフェーズへ',
+      resolve_done: '解決確認 → ラウンド終了フェーズへ',
+      round_start: '次のラウンドを開始',
+      end_phase_start: '🎤 貢献演説タイムを開始',
+      vote_start: '🗳 投票フェーズを開始',
+      mission_reveal: '🔓 秘密ミッション公開へ'
+    };
+    el.innerHTML = `<button class="phase-btn" style="padding:12px 32px;font-size:16px">${labels[type] || '次へ'}</button>`;
+    el.querySelector('.phase-btn').addEventListener('click', callback);
+  },
+
+  // ==================================================================
+  // showEventCard / showCrisisCard
+  // ==================================================================
+  showEventCard(card) {
+    const el = this.$('event-area');
+    el.className = 'visible';
+    el.innerHTML =
+      `<div class="event-title">\u{1F4CB} ${card.title}</div>` +
+      `<div class="event-effect">${card.effect || ''}</div>`;
+  },
+
+  showCrisisCard(card) {
+    const el = this.$('event-area');
+    el.className = 'visible crisis';
+    el.innerHTML =
+      `<div class="event-title">\u{1F480} ${card.title}</div>` +
+      `<div class="event-effect">${card.immediateEffect || ''}</div>` +
+      (card.continuousEffect ? `<div class="event-effect" style="margin-top:4px;color:#FF9800">${card.continuousEffect}</div>` : '');
+  },
+
+  // ==================================================================
+  // showDecisionUI
+  // ==================================================================
+  showDecisionUI(options, callback) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    let html = `<h3>判断が必要です</h3><div class="modal-label">${options.label || ''}</div><div class="modal-buttons">`;
+
+    switch (options.type) {
+      case 'acknowledge':
+        html += `<button class="modal-btn confirm-yes">OK</button>`;
+        overlay.classList.add('visible');
+        modal.innerHTML = html + '</div>';
+        modal.querySelector('.confirm-yes').addEventListener('click', () => {
+          overlay.classList.remove('visible');
+          callback(options.toDecision());
+        });
+        return;
+
+      case 'confirm':
+        html += `<button class="modal-btn confirm-yes">はい</button>`;
+        html += `<button class="modal-btn confirm-no">いいえ</button>`;
+        overlay.classList.add('visible');
+        modal.innerHTML = html + '</div>';
+        modal.querySelector('.confirm-yes').addEventListener('click', () => {
+          overlay.classList.remove('visible');
+          callback(options.toDecision(true));
+        });
+        modal.querySelector('.confirm-no').addEventListener('click', () => {
+          overlay.classList.remove('visible');
+          callback(options.toDecision(false));
+        });
+        return;
+
+      case 'select_player': {
+        const candidates = (options.candidates && options.candidates.length > 0) ? options.candidates : options.fallback || [];
+        for (const c of candidates) {
+          html += `<button class="modal-btn" data-id="${c.id}">${c.name}</button>`;
+        }
+        overlay.classList.add('visible');
+        modal.innerHTML = html + '</div>';
+        modal.querySelectorAll('.modal-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            overlay.classList.remove('visible');
+            const selected = candidates.find(c => c.id === btn.dataset.id);
+            callback(options.toDecision(selected));
+          });
+        });
+        return;
+      }
+
+      case 'select_player_confirm': {
+        const candidates = (options.candidates && options.candidates.length > 0) ? options.candidates : [];
+        for (const c of candidates) {
+          html += `<button class="modal-btn" data-id="${c.id}">${c.name}</button>`;
+        }
+        overlay.classList.add('visible');
+        modal.innerHTML = html + '</div>';
+        modal.querySelectorAll('.modal-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const selected = candidates.find(c => c.id === btn.dataset.id);
+            // 2段階: 受け入れ確認
+            modal.innerHTML = `<h3>${selected.name} を選択</h3>` +
+              `<div class="modal-label">受け入れますか?</div>` +
+              `<div class="modal-buttons">` +
+              `<button class="modal-btn confirm-yes">はい</button>` +
+              `<button class="modal-btn confirm-no">いいえ</button></div>`;
+            modal.querySelector('.confirm-yes').addEventListener('click', () => {
+              overlay.classList.remove('visible');
+              callback(options.toDecision(selected, true));
+            });
+            modal.querySelector('.confirm-no').addEventListener('click', () => {
+              overlay.classList.remove('visible');
+              callback(options.toDecision(selected, false));
+            });
+          });
+        });
+        return;
+      }
+
+      default:
+        html += `<button class="modal-btn confirm-yes">OK</button>`;
+        overlay.classList.add('visible');
+        modal.innerHTML = html + '</div>';
+        modal.querySelector('.confirm-yes').addEventListener('click', () => {
+          overlay.classList.remove('visible');
+          callback(options.toDecision ? options.toDecision() : {});
+        });
+    }
+  },
+
+  // ==================================================================
+  // showTargetSelection
+  // ==================================================================
+  showTargetSelection(gs, fromIndex, effect, callback) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    let html = `<h3>対象プレイヤーを選択</h3><div class="modal-buttons">`;
+    for (let i = 0; i < gs.players.length; i++) {
+      if (i === fromIndex) continue;
+      const p = gs.players[i];
+      if (p.status === 'eliminated') continue;
+      html += `<button class="modal-btn" data-idx="${i}">${p.profession.name}</button>`;
+    }
+    html += '</div>';
+    overlay.classList.add('visible');
+    modal.innerHTML = html;
+    modal.querySelectorAll('.modal-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.classList.remove('visible');
+        callback(parseInt(btn.dataset.idx));
+      });
+    });
+  },
+
+  // ==================================================================
+  // showCardSelection
+  // ==================================================================
+  showCardSelection(cards, count, callback) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    const selected = new Set();
+    function render() {
+      let html = `<h3>${count}枚選択してください</h3><div class="modal-buttons">`;
+      cards.forEach((c, i) => {
+        const sel = selected.has(i) ? 'style="border-color:#4CAF50;color:#4CAF50"' : '';
+        html += `<button class="modal-btn" data-idx="${i}" ${sel}>${c.title} (${c.type})</button>`;
+      });
+      html += `</div><div style="margin-top:12px"><button class="modal-btn confirm-yes" ${selected.size !== count ? 'disabled' : ''}>決定</button></div>`;
+      modal.innerHTML = html;
+      modal.querySelectorAll('.modal-btn[data-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.idx);
+          if (selected.has(idx)) selected.delete(idx);
+          else if (selected.size < count) selected.add(idx);
+          render();
+        });
+      });
+      const confirmBtn = modal.querySelector('.confirm-yes');
+      if (confirmBtn && !confirmBtn.disabled) {
+        confirmBtn.addEventListener('click', () => {
+          overlay.classList.remove('visible');
+          callback([...selected]);
+        });
+      }
+    }
+    overlay.classList.add('visible');
+    render();
+  },
+
+  // ==================================================================
+  // showDiscardUI
+  // ==================================================================
+  showDiscardUI(gs, playerIndex, callback) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    const player = gs.players[playerIndex];
+    let html = `<h3>手札上限超過 - 1枚捨ててください</h3><div class="modal-buttons">`;
+    player.hand.forEach((c, i) => {
+      html += `<button class="modal-btn" data-idx="${i}">${c.title} (${c.type})</button>`;
+    });
+    html += '</div>';
+    overlay.classList.add('visible');
+    modal.innerHTML = html;
+    modal.querySelectorAll('.modal-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.classList.remove('visible');
+        callback(parseInt(btn.dataset.idx));
+      });
+    });
+  },
+
+  // ==================================================================
+  // showMultiDiscardUI（M-JIMU1用: 好きな枚数捨てる）
+  // ==================================================================
+  showMultiDiscardUI(gs, playerIndex, callback) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    const player = gs.players[playerIndex];
+    const selected = new Set();
+
+    function render() {
+      let html = '<h3>診療報酬最適化: 捨てるカードを選択（0枚でもOK）</h3><div class="modal-buttons" style="flex-wrap:wrap">';
+      player.hand.forEach((c, i) => {
+        const sel = selected.has(i) ? 'style="border-color:#F44336;opacity:.5"' : '';
+        html += `<button class="modal-btn" data-idx="${i}" ${sel}>${c.title} (${c.type})</button>`;
+      });
+      html += `</div><div style="margin-top:12px;color:#a8b2d1">選択中: ${selected.size}枚</div>`;
+      html += `<button class="modal-btn confirm-yes" style="margin-top:8px;border-color:#4CAF50;color:#4CAF50">決定（${selected.size}枚捨てて${selected.size}枚補充）</button>`;
+      modal.innerHTML = html;
+      modal.querySelectorAll('.modal-btn[data-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.idx);
+          if (selected.has(idx)) selected.delete(idx);
+          else selected.add(idx);
+          render();
+        });
+      });
+      modal.querySelector('.confirm-yes').addEventListener('click', () => {
+        overlay.classList.remove('visible');
+        callback([...selected]);
+      });
+    }
+    overlay.classList.add('visible');
+    render();
+  },
+
+  // ==================================================================
+  // showTriageUI
+  // ==================================================================
+  showTriageUI(gs, callback) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    let html = `<h3>トリアージ: 放置する患者を選択</h3><div class="modal-buttons">`;
+    for (let i = 0; i < gs.maxSlots; i++) {
+      const card = gs.patientSlots[i];
+      if (!card) continue;
+      html += `<button class="modal-btn" data-slot="${i}">スロット${i+1}: ${card.title}</button>`;
+    }
+    html += '</div>';
+    overlay.classList.add('visible');
+    modal.innerHTML = html;
+    modal.querySelectorAll('.modal-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.classList.remove('visible');
+        callback(parseInt(btn.dataset.slot));
+      });
+    });
+  },
+
+  // ==================================================================
+  // showSkillConfirmation - 固有スキル発動確認モーダル
+  // ==================================================================
+  showSkillConfirmation(skillName, skillEffect, onConfirm) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    let html = `<h3>固有スキル発動確認</h3>`;
+    html += `<div class="modal-label">`;
+    html += `<div style="font-size:16px;font-weight:bold;color:#e94560;margin-bottom:8px">${skillName}</div>`;
+    html += `<div style="font-size:14px;line-height:1.6">${skillEffect}</div>`;
+    html += `</div>`;
+    html += `<div class="modal-buttons">`;
+    html += `<button class="modal-btn confirm-yes" style="border-color:#4CAF50;color:#4CAF50">発動する</button>`;
+    html += `<button class="modal-btn confirm-no" style="border-color:#F44336;color:#F44336">キャンセル</button>`;
+    html += `</div>`;
+    overlay.classList.add('visible');
+    modal.innerHTML = html;
+    modal.querySelector('.confirm-yes').addEventListener('click', () => {
+      overlay.classList.remove('visible');
+      onConfirm();
+    });
+    modal.querySelector('.confirm-no').addEventListener('click', () => {
+      overlay.classList.remove('visible');
+    });
+  },
+
+  // ==================================================================
+  // showManagementChoice
+  // ==================================================================
+  showManagementChoice(gs, callback) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    const mgmtCards = DATA.actionCards.filter(c => c.type === 'マネジメント');
+    let html = `<h3>マネジメント効果を選択</h3><div class="modal-buttons">`;
+    for (const c of mgmtCards) {
+      html += `<button class="modal-btn" data-id="${c.id}">${c.title}<br><small>${c.extra}</small></button>`;
+    }
+    html += '</div>';
+    overlay.classList.add('visible');
+    modal.innerHTML = html;
+    modal.querySelectorAll('.modal-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.classList.remove('visible');
+        callback(btn.dataset.id);
+      });
+    });
+  },
+
+  // ==================================================================
+  // hideSetup
+  // ==================================================================
+  hideSetup() {
+    this.$('setup').style.display = 'none';
+    this.$('game').style.display = 'block';
+  },
+
+  // ==================================================================
+  // showGameOver (簡易版 - 敗北時のみ直接表示。勝利時はmain.jsが演説→投票→デブリーフィングを制御)
+  // ==================================================================
+  showGameOver(gs) {
+    // 勝利時は演説・投票フェーズを経由するため、ここでは何もしない
+    // (main.jsのendGame()が制御する)
+  },
+
+  // ==================================================================
+  // showSpeechUI - 貢献演説タイム (L4)
+  // ==================================================================
+  showSpeechUI(gs, playerIndex, durationSec, onComplete) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    const player = gs.players[playerIndex];
+    let remaining = durationSec;
+
+    // ハイライト対象プレイヤーパネル
+    const panel = this.$(`player-panel-${playerIndex}`);
+    if (panel) {
+      panel.style.border = '3px solid #FFD700';
+      panel.style.boxShadow = '0 0 16px rgba(255,215,0,.5)';
+    }
+
+    function renderSpeech() {
+      modal.innerHTML =
+        `<div class="speech-panel">` +
+        `<h3>貢献演説タイム</h3>` +
+        `<div class="speech-player">${player.profession.name}</div>` +
+        `<div style="font-size:13px;color:#a8b2d1;margin-bottom:8px">自分がチームにどれだけ貢献したかをアピールしてください</div>` +
+        `<div class="speech-timer">${remaining}</div>` +
+        `<button class="speech-skip" id="speech-skip-btn">スキップ / 演説完了</button>` +
+        `</div>`;
+      modal.querySelector('#speech-skip-btn').addEventListener('click', finish);
+    }
+
+    function finish() {
+      clearInterval(timer);
+      overlay.classList.remove('visible');
+      if (panel) {
+        panel.style.border = '';
+        panel.style.boxShadow = '';
+      }
+      onComplete();
+    }
+
+    overlay.classList.add('visible');
+    renderSpeech();
+
+    const timer = setInterval(() => {
+      remaining--;
+      const timerEl = modal.querySelector('.speech-timer');
+      if (timerEl) timerEl.textContent = remaining;
+      if (remaining <= 0) finish();
+    }, 1000);
+  },
+
+  // ==================================================================
+  // showVotingUI - 投票フェーズ (L5-L6)
+  // ==================================================================
+  showVotingUI(gs, playerIndex, durationSec, onComplete) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    const player = gs.players[playerIndex];
+    const totalCards = player.votingCards;
+    const allocations = {};
+    for (const p of gs.players) {
+      if (p.status !== 'eliminated') allocations[p.id] = 0;
+    }
+    let remaining = durationSec;
+
+    function getAllocated() {
+      return Object.values(allocations).reduce((a, b) => a + b, 0);
+    }
+
+    function renderVoting() {
+      const allocated = getAllocated();
+      const left = totalCards - allocated;
+      let html =
+        `<div class="vote-panel">` +
+        `<h3>投票フェーズ</h3>` +
+        `<div class="vote-info">${player.profession.name} の投票カード: ${totalCards}枚</div>` +
+        `<div class="vote-remaining">残り: ${left}枚</div>` +
+        `<div class="vote-timer">${remaining}秒</div>` +
+        `<div class="vote-buttons">`;
+
+      for (const p of gs.players) {
+        if (p.status === 'eliminated') continue;
+        const count = allocations[p.id] || 0;
+        html += `<div class="vote-btn" data-pid="${p.id}">` +
+          `${p.profession.name}<span class="vote-count">${count}</span>` +
+          `</div>`;
+      }
+      html += `</div>`;
+      html += `<button class="vote-confirm" id="vote-confirm-btn" ${left > 0 ? '' : ''}>配分完了</button>`;
+      html += `</div>`;
+      modal.innerHTML = html;
+
+      // 投票ボタンのクリック
+      modal.querySelectorAll('.vote-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pid = btn.dataset.pid;
+          if (getAllocated() < totalCards) {
+            allocations[pid] = (allocations[pid] || 0) + 1;
+            renderVoting();
+          }
+        });
+        // 右クリックで減らす
+        btn.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const pid = btn.dataset.pid;
+          if ((allocations[pid] || 0) > 0) {
+            allocations[pid]--;
+            renderVoting();
+          }
+        });
+      });
+
+      // 確定ボタン
+      modal.querySelector('#vote-confirm-btn').addEventListener('click', finish);
+    }
+
+    function finish() {
+      clearInterval(timer);
+      // タイムアウト時: 未配分は自分に自動投票
+      const left = totalCards - getAllocated();
+      if (left > 0) {
+        allocations[player.id] = (allocations[player.id] || 0) + left;
+      }
+      overlay.classList.remove('visible');
+      onComplete(allocations);
+    }
+
+    overlay.classList.add('visible');
+    renderVoting();
+
+    const timer = setInterval(() => {
+      remaining--;
+      const timerEl = modal.querySelector('.vote-timer');
+      if (timerEl) timerEl.textContent = remaining + '秒';
+      if (remaining <= 0) finish();
+    }, 1000);
+  },
+
+  // ==================================================================
+  // showMissionRevealAndVP - ミッション公開・VP集計 (L7-L9)
+  // ==================================================================
+  showMissionRevealAndVP(gs, vpResults, onComplete) {
+    const el = this.$('gameover');
+    const overlay = this.$('gameover-overlay');
+
+    let html = `<h2 style="color:#FFD700">チーム勝利!</h2>`;
+    html += `<div class="go-reason">${gs.gameOverReason || ''}</div>`;
+
+    // 秘密ミッション公開
+    html += `<div class="mission-reveal"><h3 style="color:#e94560;margin-bottom:12px">秘密ミッション公開</h3>`;
+    for (const p of gs.players) {
+      const m = p.secretMission;
+      if (!m) continue;
+      const achieved = m.achieved;
+      html += `<div class="mission-card ${achieved ? 'achieved' : 'failed'}">` +
+        `<div class="mission-player">${p.profession.name}</div>` +
+        `<div class="mission-title">${m.title}</div>` +
+        `<div style="font-size:11px;color:#a8b2d1">${m.condition}</div>` +
+        `<div class="mission-status">${achieved ? '達成! +' + m.vp + 'VP' : '未達成'}</div>` +
+        `<button class="modal-btn" style="margin-top:4px;padding:4px 8px;font-size:11px" ` +
+        `onclick="this.parentNode.querySelector('.mission-status').textContent='${achieved ? '未達成' : '達成! +' + m.vp + 'VP'}';` +
+        `this.closest('.mission-card').classList.toggle('achieved');this.closest('.mission-card').classList.toggle('failed')">` +
+        `判定切替</button>` +
+        `</div>`;
+    }
+    html += `</div>`;
+
+    // VP集計
+    html += `<div class="vp-results"><h3 style="color:#e94560;margin:16px 0 12px">最終VP集計</h3>`;
+    for (let i = 0; i < vpResults.length; i++) {
+      const r = vpResults[i];
+      const p = gs.players.find(pl => pl.id === r.playerId);
+      const cardsHeld = p ? p.votingCards : 0;
+      const mvpCls = r.isMVP ? ' mvp' : '';
+      html += `<div class="vp-row${mvpCls}">` +
+        `<span class="vp-rank">${i + 1}</span>` +
+        `<span class="vp-name">${r.professionName}${r.isMVP ? ' 👑MVP' : ''}</span>` +
+        `<span class="vp-score" style="font-size:18px;font-weight:bold">${r.vp}VP</span>` +
+        `</div>` +
+        `<div class="vp-breakdown" style="padding:2px 8px 8px 40px;font-size:12px;color:#a8b2d1">` +
+        `投票カード保有: ${cardsHeld}枚 → 投票で獲得: ${r.breakdown.votesReceived}VP` +
+        ` | ミッション: ${r.breakdown.missionVP}VP` +
+        (r.breakdown.promotionVP > 0 ? ` | 昇進: ${r.breakdown.promotionVP}VP` : '') +
+        '' +
+        `</div>`;
+    }
+    html += `</div>`;
+
+    html += `<button class="phase-btn" id="debrief-btn" style="margin-top:16px">デブリーフィング画面へ</button>`;
+
+    el.innerHTML = html;
+    overlay.classList.add('visible');
+
+    // デブリーフィングボタン
+    const debriefBtn = el.querySelector('#debrief-btn');
+    if (debriefBtn) {
+      debriefBtn.addEventListener('click', () => {
+        overlay.classList.remove('visible');
+        onComplete();
+      });
+    }
+  },
+
+  // ==================================================================
+  // showDebriefing - デブリーフィング画面 (L10-L15)
+  // ==================================================================
+  showDebriefing(gs) {
+    const el = this.$('gameover');
+    const overlay = this.$('gameover-overlay');
+
+    let html = `<h2 style="color:${gs.teamWin ? '#4CAF50' : '#F44336'}">${gs.teamWin ? 'チーム勝利!' : 'チーム敗北...'}</h2>`;
+    html += `<div class="go-reason">${gs.gameOverReason || ''}</div>`;
+
+    // 結束度推移グラフ
+    html += `<div class="debrief-section"><h4>結束度推移</h4>`;
+    if (gs.cohesionHistory && gs.cohesionHistory.length > 0) {
+      const maxCoh = CONSTANTS.MAX_COHESION;
+      html += `<div class="debrief-bar-chart">`;
+      for (const entry of gs.cohesionHistory) {
+        const pct = Math.max(5, (entry.cohesion / maxCoh) * 100);
+        const color = entry.cohesion >= 8 ? '#4CAF50' : entry.cohesion >= 5 ? '#42A5F5' : entry.cohesion >= 3 ? '#FF9800' : '#F44336';
+        html += `<div class="debrief-bar">` +
+          `<div class="debrief-bar-val">${entry.cohesion}</div>` +
+          `<div class="debrief-bar-fill" style="height:${pct}%;background:${color}"></div>` +
+          `<div class="debrief-bar-label">R${entry.round}</div>` +
+          `</div>`;
+      }
+      html += `</div>`;
+    } else {
+      html += `<div style="color:#666;font-size:12px">データなし</div>`;
+    }
+    html += `</div>`;
+
+    // 最終VP集計（デブリーフィング）
+    html += `<div class="debrief-section"><h4>最終VP集計</h4>`;
+    html += `<table class="debrief-table"><tr><th>職種</th><th>BN</th><th>状態</th><th>投票カード保有</th><th>投票で獲得</th><th>ミッションVP</th><th>合計VP</th></tr>`;
+    const vpData = gs.votingPhaseData;
+    for (const p of gs.players) {
+      const statusLabel = p.status === 'eliminated' ? '脱落' : '正常';
+      const votesReceived = (vpData && vpData.votes) ? (vpData.votes[p.id] || 0) : 0;
+      const missionVP = (p.secretMission && p.secretMission.achieved) ? (p.secretMission.vp || 0) : 0;
+      // ステークホルダー外交の段階制VP
+      let tieredVP = 0;
+      if (p.secretMission && p.secretMission.vpTiered) {
+        const tiers = p.secretMission.vpTiered;
+        if (p.secretMission.achieved) {
+          if (gs.hospitalFavor >= 8 && tiers[8]) tieredVP = tiers[8];
+          else if (gs.hospitalFavor >= 5 && tiers[5]) tieredVP = tiers[5];
+        }
+      }
+      const effectiveMissionVP = tieredVP > 0 ? tieredVP : missionVP;
+      const promotionVP = p.promotionAccepted ? 3 : 0;
+      const totalVP = votesReceived + effectiveMissionVP + promotionVP;
+      const isMVP = (vpData && vpData.results && vpData.results.length > 0 && vpData.results[0].playerId === p.id);
+      html += `<tr${isMVP ? ' style="background:#2a2a00;font-weight:bold"' : ''}>` +
+        `<td>${p.profession.name}${isMVP ? ' 👑' : ''}</td>` +
+        `<td>${p.burnout}/${p.profession.burnoutThreshold}</td>` +
+        `<td>${statusLabel}</td>` +
+        `<td>${p.votingCards}枚</td>` +
+        `<td>${votesReceived}VP</td>` +
+        `<td>${effectiveMissionVP}VP</td>` +
+        `<td style="font-size:16px;font-weight:bold;color:#FFD700">${totalVP}VP</td>` +
+        `</tr>`;
+    }
+    html += `</table></div>`;
+
+    // 放置ペナルティゾーン履歴
+    html += `<div class="debrief-section"><h4>放置ペナルティゾーン</h4>`;
+    if (gs.penaltyZone.length > 0) {
+      html += `<table class="debrief-table"><tr><th>#</th><th>患者名</th></tr>`;
+      gs.penaltyZone.forEach((card, i) => {
+        html += `<tr><td>${i + 1}</td><td>${card.title}</td></tr>`;
+      });
+      html += `</table>`;
+    } else {
+      html += `<div style="color:#4CAF50;font-size:12px">放置ペナルティなし</div>`;
+    }
+    html += `</div>`;
+
+    // 基本統計
+    html += `<div class="debrief-section"><h4>ゲーム統計</h4>`;
+    html += `<table class="debrief-table">`;
+    html += `<tr><td>解決患者数</td><td>${gs.totalResolved}</td></tr>`;
+    html += `<tr><td>最終結束度</td><td>${gs.cohesion}/${CONSTANTS.MAX_COHESION}</td></tr>`;
+    html += `<tr><td>最終病院長の評価</td><td>${gs.hospitalFavor}/${CONSTANTS.MAX_FAVOR}</td></tr>`;
+    html += `<tr><td>脱落者数</td><td>${gs.eliminatedCount}</td></tr>`;
+    html += `<tr><td>危機マーカー</td><td>${gs.crisisMarkerCount}</td></tr>`;
+    html += `</table></div>`;
+
+    html += `<button class="go-restart" onclick="location.reload()">もう一度</button>`;
+
+    el.innerHTML = html;
+    overlay.classList.add('visible');
+  },
+
+  // ==================================================================
+  // showBriefingSummary - フェーズ0 手札概要表示 (E改善)
+  // ==================================================================
+  showBriefingSummary(gs) {
+    // hand-cards に表示（hand-area の構造を壊さないように hand-cards の中に書く）
+    const el = this.$('hand-cards');
+    if (!el) return;
+    const area = this.$('hand-area');
+    if (area) { area.style.display = 'block'; area.querySelector('h3').textContent = '手札種別概要（フェーズ0）'; }
+    const types = ['診察', 'エデュケーション', 'ソーシャル', 'マネジメント'];
+    let html = '<div class="briefing-summary">';
+    for (let i = 0; i < gs.players.length; i++) {
+      const p = gs.players[i];
+      if (p.status === 'eliminated') continue;
+      const typeSet = new Set(p.hand.map(c => c.type));
+      let summary = '';
+      for (const t of types) {
+        if (typeSet.has(t)) {
+          summary += `<span class="bs-has">${t}あり</span> `;
+        } else {
+          summary += `<span class="bs-none">${t}なし</span> `;
+        }
+      }
+      html += `<div class="bs-player"><strong>${p.profession.name}:</strong> ${summary}</div>`;
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  },
+
+  // ==================================================================
+  // animateBurnout - バーンアウト増加時の赤フラッシュ (R)
+  // ==================================================================
+  animateBurnout(playerIndex) {
+    const panel = this.$(`player-panel-${playerIndex}`);
+    if (panel) this.animate(panel, 'burnoutFlash', 600);
+  },
+
+  // ==================================================================
+  // animateResolve - 患者解決時のゴールド発光 (R)
+  // ==================================================================
+  animateResolve(resolvedList) {
+    for (const r of resolvedList) {
+      const slot = document.querySelector(`.patient-slot[data-slot="${r.slotIndex}"]`);
+      if (slot) this.animate(slot, 'resolveGlow', 1000);
+    }
+  },
+
+  // ==================================================================
+  // animateVictory - 勝利時のゴールド演出 (R)
+  // ==================================================================
+  animateVictory() {
+    const game = this.$('game');
+    if (game) this.animate(game, 'victoryGlow', 3000);
+  },
+
+  // ==================================================================
+  // animateDefeat - 即時敗北時の赤い画面フラッシュ (R)
+  // ==================================================================
+  animateDefeat() {
+    const game = this.$('game');
+    if (game) this.animate(game, 'defeatFlash', 1200);
+  },
+
+  // ==================================================================
+  // getSelectedPrioritySlot
+  // ==================================================================
+  getSelectedPrioritySlot() {
+    return this._selectedPrioritySlot;
+  },
+
+  // ==================================================================
+  // renderLog
+  // ==================================================================
+  renderLog(gs) {
+    const el = this.$('log');
+    let html = '';
+    for (const entry of gs.log) {
+      html += `<div class="log-entry"><span class="log-tag">[R${entry.round}]</span> ${entry.message}</div>`;
+    }
+    el.innerHTML = html;
+    el.scrollTop = el.scrollHeight;
+  },
+
+  // ==================================================================
+  // showSlotSelection (公開メソッド)
+  showSlotSelection(gs, callback) {
+    return this._showSlotSelection(gs, callback);
+  },
+
+  // _showSlotSelection (内部ヘルパー)
+  // ==================================================================
+  _showSlotSelection(gs, callback) {
+    const modal = this.$('modal');
+    const overlay = this.$('modal-overlay');
+    let html = `<h3>患者スロットを選択</h3><div class="modal-buttons">`;
+    for (let i = 0; i < gs.maxSlots; i++) {
+      const card = gs.patientSlots[i];
+      if (!card) continue;
+      html += `<button class="modal-btn" data-slot="${i}">スロット${i+1}: ${card.title}</button>`;
+    }
+    html += '</div>';
+    overlay.classList.add('visible');
+    modal.innerHTML = html;
+    modal.querySelectorAll('.modal-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.classList.remove('visible');
+        callback(parseInt(btn.dataset.slot));
+      });
+    });
+  }
+};
+
+// ======================================================================
+// セットアップ画面の初期化
+// ======================================================================
+(function initSetup() {
+  // 選択可能な職種のみ表示（R06, R08は除外）
+  const selectableIds = CONSTANTS.SELECTABLE_PROFESSIONS;
+  const allProfs = DATA.professions.filter(p => selectableIds.includes(p.id));
+  const countRadios = document.querySelectorAll('input[name="pcount"]');
+  const selectsContainer = UI.$('profession-selects');
+  const startBtn = UI.$('start-btn');
+
+  function getCount() {
+    const checked = document.querySelector('input[name="pcount"]:checked');
+    return checked ? parseInt(checked.value) : 4;
+  }
+
+  function getDifficulty() {
+    const checked = document.querySelector('input[name="diff"]:checked');
+    return checked ? checked.value : '標準';
+  }
+
+  function buildSelects() {
+    const count = getCount();
+    selectsContainer.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const sel = document.createElement('select');
+      sel.id = `prof-${i}`;
+      let opts = `<option value="">プレイヤー${i+1} の職種を選択</option>`;
+      for (const p of allProfs) {
+        const selected = (CONSTANTS.PLAYER_CONFIGS[count] && CONSTANTS.PLAYER_CONFIGS[count].professions[i] === p.id) ? ' selected' : '';
+        opts += `<option value="${p.id}"${selected}>${p.id}: ${p.name}</option>`;
+      }
+      sel.innerHTML = opts;
+      selectsContainer.appendChild(sel);
+    }
+  }
+
+  countRadios.forEach(r => r.addEventListener('change', buildSelects));
+  buildSelects();
+
+  startBtn.addEventListener('click', () => {
+    const count = getCount();
+    const difficulty = getDifficulty();
+    const profIds = [];
+    for (let i = 0; i < count; i++) {
+      const sel = UI.$(`prof-${i}`);
+      if (!sel.value) { alert(`プレイヤー${i+1} の職種を選択してください`); return; }
+      profIds.push(sel.value);
+    }
+    // 重複チェック
+    if (new Set(profIds).size !== profIds.length) { alert('同じ職種は選べません'); return; }
+
+    // 難易度オプション収集
+    const options = {
+      hardStrategyTime: UI.$('opt-hard-strategy').checked,
+      hardHandLimit: UI.$('opt-hard-hand').checked,
+      hardExtraPatients: UI.$('opt-hard-patients').checked,
+      easyStrategyTime: UI.$('opt-easy-strategy').checked,
+      easyBurnout: UI.$('opt-easy-burnout').checked,
+      easyExtraSkill: UI.$('opt-easy-skill').checked,
+      easyFreeCommunication: UI.$('opt-easy-comm').checked
+    };
+
+    Game.start(count, difficulty, profIds, options);
+  });
+})();
+</script>
+</body>
+</html>
