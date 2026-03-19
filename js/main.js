@@ -327,12 +327,28 @@ const Game = {
 
     UI.renderAll(this.gs);
     UI.renderHand(this.gs, playerIndex);
-    console.log('[_showActionUI] renderHand done. hand-area display=' + document.getElementById('hand-area').style.display);
+
+    // 3回目アクション警告ヘルパー: 残り1回で実行するとBN+2になる場合に確認
+    const _confirmIfLastAction = (callback) => {
+      if (player.actionsRemaining === 1 && player.actionsUsedThisRound === (CONSTANTS.ACTIONS_PER_TURN - 1) && !this.gs._noBurnoutOn3rdAction) {
+        UI.showDecisionUI({
+          type: 'confirm',
+          label: `⚠ これが3回目のアクションです。実行するとバーンアウト+2が発生します。実行しますか？`,
+          toDecision: (accepted) => ({ accepted })
+        }, (decision) => {
+          if (decision.accepted) callback();
+          else this._showActionUI(playerIndex);
+        });
+      } else {
+        callback();
+      }
+    };
+
     UI.renderActionButtons(this.gs, playerIndex, {
       onPlayCard: (cardIndex, targetSlot) => {
         const card = player.hand[cardIndex];
-        // actionType は card.type を使用（data.js ではtype フィールド）
         if (!card.actionType) card.actionType = card.type;
+        _confirmIfLastAction(() => {
         const res = Actions.playCard(this.gs, playerIndex, cardIndex, targetSlot);
         if (res.success) {
           // アニメーション: バーンアウト増加
@@ -380,13 +396,16 @@ const Game = {
         }
         UI.renderAll(this.gs);
         this._showActionUI(playerIndex);
+        }); // _confirmIfLastAction 閉じ
       },
 
       onUseLobby: (effect, targetIndex) => {
+        _confirmIfLastAction(() => {
         const res = Actions.useLobbyCard(this.gs, playerIndex, effect, targetIndex);
         if (!res.success) UI.showMessage(res.reason);
         UI.renderAll(this.gs);
         this._showActionUI(playerIndex);
+        }); // _confirmIfLastAction 閉じ
       },
 
       onUseSkill: () => {
@@ -793,12 +812,18 @@ const Game = {
         };
 
       case 'C04':
-      case 'C05':
       case 'C06':
         return {
           type: 'acknowledge',
           label: card.immediateEffect,
           toDecision: () => ({})
+        };
+
+      case 'C05':
+        return {
+          type: 'confirm',
+          label: '全員の根回しカードを消費して病院長の評価+2にしますか？\n（拒否すると病院長の評価-4）',
+          toDecision: (accepted) => ({ accepted })
         };
 
       default:

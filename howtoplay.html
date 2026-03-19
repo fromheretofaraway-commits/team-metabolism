@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>チーム・メタボリズム - 遊び方ガイド</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#e0e0e0;font-family:'Yu Gothic UI','Hiragino Sans',sans-serif;line-height:1.7;padding:20px;max-width:800px;margin:0 auto}
+h1{text-align:center;color:#e94560;font-size:28px;margin-bottom:8px}
+.subtitle{text-align:center;color:#a8b2d1;font-size:14px;margin-bottom:32px}
+h2{color:#42A5F5;font-size:20px;margin:28px 0 12px;padding-bottom:6px;border-bottom:2px solid #0f3460}
+h3{color:#66BB6A;font-size:16px;margin:16px 0 8px}
+p{margin-bottom:12px;font-size:14px}
+ul,ol{margin:8px 0 12px 24px;font-size:14px}
+li{margin-bottom:4px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{background:#0f3460;color:#fff;padding:8px;text-align:left}
+td{padding:6px 8px;border-bottom:1px solid #2a2a4a}
+tr:nth-child(even) td{background:#16213e}
+.card{background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:16px;margin:12px 0}
+.emoji{font-size:20px;margin-right:6px}
+.highlight{color:#FFD700;font-weight:bold}
+.danger{color:#F44336}
+.safe{color:#4CAF50}
+.warn{color:#FF9800}
+a{color:#42A5F5}
+.back-link{text-align:center;margin-top:32px}
+.back-link a{display:inline-block;padding:12px 32px;background:#e94560;color:#fff;text-decoration:none;border-radius:8px;font-size:16px}
+.toc{background:#16213e;border-radius:8px;padding:16px;margin-bottom:24px}
+.toc a{color:#42A5F5;text-decoration:none}
+.toc a:hover{text-decoration:underline}
+.toc ol{margin-left:20px}
+</style>
+</head>
+<body>
+
+<h1>🏥 チーム・メタボリズム</h1>
+<p class="subtitle">糖尿病チーム医療 × 半協力型ボードゲーム</p>
+
+<div class="toc">
+<strong>目次</strong>
+<ol>
+<li><a href="#overview">どんなゲーム？</a></li>
+<li><a href="#setup">ゲームの準備</a></li>
+<li><a href="#flow">ラウンドの流れ</a></li>
+<li><a href="#actions">できること（アクション）</a></li>
+<li><a href="#patient">患者ケースカード</a></li>
+<li><a href="#win">勝ち方・負け方</a></li>
+<li><a href="#end">ゲーム終了後</a></li>
+<li><a href="#tips">コツ</a></li>
+</ol>
+</div>
+
+<h2 id="overview">🎯 どんなゲーム？</h2>
+<p>あなたは<span class="highlight">糖尿病チーム</span>の一員です。内科医、看護師、栄養士、薬剤師、理学療法士、心理士のいずれかを担当し、次々と来る患者に<strong>チームで協力して</strong>対応します。</p>
+<p>ただし、働きすぎると<span class="danger">バーンアウト（燃え尽き）</span>で脱落します。チームを守りつつ、自分も守る。そのバランスが試されます。</p>
+<p><strong>8ラウンド</strong>生き残れば<span class="safe">チーム勝利</span>。その後、個人のVP（勝利点）で<span class="highlight">MVP</span>を決めます。</p>
+
+<h2 id="setup">🎮 ゲームの準備</h2>
+<ol>
+<li><strong>人数</strong>を選ぶ（3〜6人）</li>
+<li><strong>難易度</strong>を選ぶ（入門〜地獄）</li>
+<li>各自が<strong>職種</strong>を選ぶ</li>
+<li>「ゲーム開始」を押す</li>
+</ol>
+<p>手札4枚、根回しカード2枚、患者4枚が自動配置されます。</p>
+
+<h2 id="flow">🔄 ラウンドの流れ</h2>
+<p>1ラウンドは以下の順に進みます。これを<strong>8ラウンド</strong>繰り返します。</p>
+
+<div class="card">
+<p><span class="emoji">📋</span><strong>フェーズ0: 申し送り</strong> — 患者ゾーンを確認</p>
+<p><span class="emoji">⚡</span><strong>フェーズ1: イベント</strong> — イベントカードが1枚めくられる（良いことも悪いことも）</p>
+<p><span class="emoji">🏥</span><strong>フェーズ2: 患者追加</strong> — 新しい患者カードがスロットに追加される（後半ほど多い）</p>
+<p><span class="emoji">🃏</span><strong>フェーズ3: アクション</strong> — <span class="highlight">メインフェーズ！</span> 各プレイヤーが順番にカードを使う</p>
+<p><span class="emoji">✅</span><strong>フェーズ4: 解決</strong> — 条件を満たした患者カードが解決される</p>
+<p><span class="emoji">🌙</span><strong>フェーズ5: ラウンド終了</strong> — 評価の効果、根回し補充、リーダー交代</p>
+</div>
+
+<h2 id="actions">🃏 できること（アクション）</h2>
+<p>自分のターンでは<strong>3回まで</strong>アクションできます。ただし…</p>
+
+<table>
+<tr><th>回数</th><th>リスク</th></tr>
+<tr><td>1〜2回目</td><td class="safe">バーンアウトなし（安全）</td></tr>
+<tr><td class="warn">3回目</td><td class="danger">バーンアウト+2 ⚠</td></tr>
+</table>
+
+<h3>アクションの種類</h3>
+<table>
+<tr><th>アクション</th><th>説明</th></tr>
+<tr><td>🩺📖🤝 カードプレイ</td><td>手札のカードを患者に使う（診察/エデュケーション/ソーシャル）</td></tr>
+<tr><td>📋 マネジメント</td><td>チーム全体を支援するカード（結束度UP、評価UPなど）</td></tr>
+<tr><td>🤝 根回しカード</td><td>病院長の評価+1、他プレイヤーのアクション+1、BN緩和の3種</td></tr>
+<tr><td>⭐ 固有スキル</td><td>職種ごとの特殊能力（1ゲーム1回のみ！）</td></tr>
+<tr><td>😤 私の仕事じゃないのに…</td><td>手札2枚捨てて、任意の種別で患者に対応（BN+1）</td></tr>
+<tr><td>⏭ パス</td><td>残りアクションを放棄</td></tr>
+</table>
+
+<h2 id="patient">🏥 患者ケースカード</h2>
+<p>患者カードはスロット1〜7に並びます。新しい患者はスロット1に入り、<strong>古い患者が押し出されていきます</strong>。</p>
+
+<div class="card">
+<p><span class="safe">■ 通常（緑）</span> — 必要コスト4。解決でVP1。余裕あり。</p>
+<p><span class="warn">■ 要注意（黄）</span> — 必要コスト3。解決でVP2＋BN+1。油断禁物。</p>
+<p><span class="danger">■ 要警戒（赤）</span> — 必要コスト2。解決でVP3＋BN+2。早急に対応！</p>
+</div>
+
+<p>スロット7から溢れた患者は<strong>放置ペナルティゾーン</strong>に移動。<span class="danger">3枚溜まったら即敗北！</span></p>
+
+<h2 id="win">🏆 勝ち方・負け方</h2>
+
+<h3 class="safe">チーム勝利の条件（8ラウンド終了時）</h3>
+<ul>
+<li>脱落した仲間が<strong>2人以下</strong></li>
+<li>結束度が<strong>1以上</strong></li>
+</ul>
+
+<h3 class="danger">即時敗北（1つでも該当で即ゲームオーバー）</h3>
+<ul>
+<li>仲間が<strong>3人脱落</strong></li>
+<li>結束度が<strong>0</strong>になった</li>
+<li>放置ペナルティが<strong>3枚</strong>に達した</li>
+<li>病院長の評価が<strong>0</strong>になった</li>
+</ul>
+
+<h2 id="end">🎤 ゲーム終了後</h2>
+<ol>
+<li><strong>貢献演説</strong> — 1人60秒で「自分はこれだけ頑張った！」をアピール</li>
+<li><strong>投票</strong> — 解決した患者カード（=投票カード）を、貢献したと思う人に配分</li>
+<li><strong>秘密ミッション公開</strong> — 隠し目標の達成をチェック</li>
+<li><strong>MVP決定</strong> — 投票VP + ミッションVP の合計で個人順位決定！</li>
+</ol>
+
+<h2 id="tips">💡 コツ</h2>
+<div class="card">
+<p>🔥 <strong>3回目のアクションは慎重に！</strong> BN+2は重い。序盤は2回で温存し、後半ここぞという時に3回使おう。</p>
+<p>🤝 <strong>根回しカードでBN救助</strong> 仲間のBNが危険なら、根回しカードの(e)バーンアウト緩和で助けよう。</p>
+<p>👑 <strong>リーダーは重要</strong> 病院長の評価が高いとリーダーにボーナスが来る（でもBNも増える！）。</p>
+<p>📋 <strong>マネジメントカードは強力</strong> 結束度+2やBN回復など、チームを救うカードが眠っている。</p>
+<p>🎯 <strong>秘密ミッションを意識</strong> 自分のミッション達成を狙いつつ、チームも勝たせるバランスが大事。</p>
+</div>
+
+<div class="back-link">
+<a href="index.html">🎮 ゲームをプレイする</a>
+</div>
+
+</body>
+</html>

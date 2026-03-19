@@ -391,15 +391,22 @@ const Phases = {
     },
 
     'C05': (gs, decision) => {
-      // 院内政治の暴走（病院長の評価-1）: 全員の根回し没収、評価4以下なら結束度-2
+      // 院内政治の暴走（病院長の評価-1）
+      // 選択: 全員の根回しカードを消費して評価+2、または評価-4
       gs.changeFavor(-1);
-      for (const p of gs.players) {
-        if (p.status === 'eliminated') continue;
-        gs.addLog(`C05: ${p.profession.name}の根回しカード${p.lobbyCards}枚を没収`);
-        p.lobbyCards = 0;
-      }
-      if (gs.hospitalFavor <= 4) {
-        const result = gs.changeCohesion(-2);
+      if (decision.accepted) {
+        // 全員の根回しカードを消費して評価+2
+        for (const p of gs.players) {
+          if (p.status === 'eliminated') continue;
+          gs.addLog(`C05: ${p.profession.name}の根回しカード${p.lobbyCards}枚を消費`);
+          p.lobbyCards = 0;
+        }
+        gs.changeFavor(2);
+        gs.addLog('C05: 全員の根回しカードを消費 → 病院長の評価+2');
+      } else {
+        // 拒否: 評価-4
+        const result = gs.changeFavor(-4);
+        gs.addLog('C05: 根回し消費を拒否 → 病院長の評価-4');
         if (result) return result;
       }
     },
